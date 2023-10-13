@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 import { Vocab, RDFTerm, global, RDFClass, RDFProperty, RDFIndividual, Status, RDFDatatype } from './common';
-import { JSDOM }  from 'jsdom';
+import { JSDOM }                                                                             from 'jsdom';
 
 /* ---------------- Utility functions ------------------------- */
 /**
@@ -511,7 +511,7 @@ export function toHTML(vocab: Vocab, template_text: string): string {
 
     /* *********************** The real processing part ****************** */
     // Get the DOM of the template
-    const document = (new JSDOM(template_text)).window.document;
+    const document: Document = (new JSDOM(template_text)).window.document;
 
     // The prefix and the URL for the vocabulary itself
     // I am just lazy to type things that are too long... :-)

@@ -108,8 +108,7 @@ export async function generateVocabularyFiles(yaml_file_name: string, template_f
         throw(new AggregateError(read_errors.join('\n')));
     }
 
-    // try {
-
+//    try {
         const conversion: VocabGeneration = new VocabGeneration(yaml);
 
         {
