@@ -5,6 +5,13 @@ import { parser, ValidationError as VError }            from '@exodus/schemasafe
 // const schema = require('./vocab.schema.json');
 import schema from "./vocab.schema.json" with { type: "json" };
 
+/**
+ * Perform a JSON Schema validation on the YAML content. Done by converting the YAML content into 
+ * a Javascript object (using the YAML parser) and checking the object against a schema.
+ * 
+ * @param yaml_raw_content The raw textual content of the YAML file (i.e, presumably after reading the file itself)
+ * @returns 
+ */
 export function validateWithSchema(yaml_raw_content: string): ValidationResults {
     try {
         // deno-lint-ignore no-explicit-any
@@ -34,16 +41,9 @@ export function validateWithSchema(yaml_raw_content: string): ValidationResults 
         }
     } catch (e) {
         // This is the case if the yaml parser throws some errors
-        console.log(e)
         return {
             vocab: null,
             error: [{ message: `${e}` }]
         };
     }
 }
-
-
-
-// ------------------------- test ---------------------
-// const yml = Deno.readTextFileSync('./test/vocabulary.yml');
-// console.log(validateWithSchema(yml));

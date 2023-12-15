@@ -108,7 +108,6 @@ property:
         url:  https://www.w3.org/TR/SRI/#the-integrity-attribute
     
   - id: evidence
-    label: Evidence
     defined_by: https://www.w3.org/TR/vc-data-model-2.0/#defn-evidence
     domain: cred:VerifiableCredential
     status: reserved
@@ -122,7 +121,6 @@ property:
     comment: The value of this property was used in the past to express the date and time the credential ceased to be valid. It has been deprecated in favor of <a href="#validUntil">validUntil</a>
 
   - id: holder
-    label: Holder
     domain: cred:VerifiablePresentation
     defined_by: https://www.w3.org/TR/vc-data-model-2.0/#defn-holder
     range : IRI
@@ -141,7 +139,6 @@ property:
     comment: The value of this property was used in the past to represent the earliest date when the information associated with the <a href="#credentialSubject">credentialSubject</a> property became valid. This property has been deprecated in favor of <a href="#validFrom">validFrom</a>.
 
   - id: issuer
-    label: Issuer
     defined_by: https://www.w3.org/TR/vc-data-model-2.0/#defn-issuer
     domain: cred:VerifiableCredential
     range: IRI

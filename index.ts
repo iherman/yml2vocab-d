@@ -108,7 +108,7 @@ export async function generateVocabularyFiles(yaml_file_name: string, template_f
         throw(new AggregateError(read_errors.join('\n')));
     }
 
-//    try {
+    try {
         const conversion: VocabGeneration = new VocabGeneration(yaml);
 
         {
@@ -129,9 +129,9 @@ export async function generateVocabularyFiles(yaml_file_name: string, template_f
                 throw(new AggregateError(write_errors.join('\n')));
             }
         }
-    // } catch(e) {
-    //     console.error(`Error in the YML conversion:\n${e.message}\nCause: ${e.cause}`);
-    // }
+    } catch(e) {
+        console.error(`Error in the YML conversion:\n${e.message}\nCause: ${e.cause}`);
+    }
 }
 
 //
