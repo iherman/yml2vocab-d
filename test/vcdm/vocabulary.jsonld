@@ -1,6 +1,6 @@
 {
     "@context": {
-        "cred": "https://w3.org/2018/credentials#",
+        "cred": "https://www.w3.org/2018/credentials#",
         "dc": "http://purl.org/dc/terms/",
         "owl": "http://www.w3.org/2002/07/owl#",
         "rdf": "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
@@ -74,7 +74,7 @@
             "@container": "@language"
         }
     },
-    "@id": "https://w3.org/2018/credentials#",
+    "@id": "https://www.w3.org/2018/credentials#",
     "@type": "owl:Ontology",
     "dc:title": {
         "@value": "Verifiable Credentials Vocabulary v2.0",
@@ -85,7 +85,7 @@
         "@language": "en"
     },
     "rdfs:seeAlso": "https://www.w3.org/TR/vc-data-model-2.0/",
-    "dc:date": "2023-12-14",
+    "dc:date": "2023-12-15",
     "rdfs_classes": [
         {
             "@id": "cred:CredentialEvidence",
@@ -217,10 +217,6 @@
             ],
             "rdfs:domain": "cred:VerifiableCredential",
             "rdfs:label": "Credential subject",
-            "rdfs:comment": {
-                "@value": "<div>An entity about which claims are made.</div>",
-                "@type": "http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML"
-            },
             "rdfs:isDefinedBy": "https://www.w3.org/TR/vc-data-model-2.0/#defn-credentialSubject",
             "vs:term_status": "stable"
         },
@@ -312,10 +308,6 @@
             ],
             "rdfs:domain": "cred:VerifiableCredential",
             "rdfs:label": "Issuer",
-            "rdfs:comment": {
-                "@value": "<div>The value of this property must be a URL uniquely identifying the issuer.</div>",
-                "@type": "http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML"
-            },
             "rdfs:isDefinedBy": "https://www.w3.org/TR/vc-data-model-2.0/#defn-issuer",
             "vs:term_status": "stable"
         },
@@ -345,7 +337,7 @@
             ],
             "rdfs:domain": "cred:VerifiableCredential",
             "rdfs:label": "Related resource",
-            "rdfs:isDefinedBy": "https://w3c-ccg.github.io/vc-render-method/#defn-relatedResource",
+            "rdfs:isDefinedBy": "https://www.w3.org/TR/vc-data-model-2.0/#defn-relatedResource",
             "vs:term_status": "stable"
         },
         {
@@ -402,10 +394,6 @@
             "rdfs:domain": "cred:VerifiablePresentation",
             "rdfs:range": "cred:VerifiableCredentialGraph",
             "rdfs:label": "Verifiable credential graph",
-            "rdfs:comment": {
-                "@value": "<div>The value of this property identifies a <a href=\"#VerifiableCredentialGraph\">Verifiable credential graph</a>. (Informally, it indirectly identifies a <a href=\"#VerifiableCredential\">Verifiable credential</a> contained in a separate graph.)</div>",
-                "@type": "http://www.w3.org/1999/02/22-rdf-syntax-ns#HTML"
-            },
             "rdfs:isDefinedBy": "https://www.w3.org/TR/vc-data-model-2.0/#defn-verifiableCredential",
             "vs:term_status": "stable"
         }

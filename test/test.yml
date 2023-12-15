@@ -297,7 +297,6 @@ property:
       The value of the `proofChain` property MUST identify a sequence of <a href=”#ProofGraph”>`ProofGraph` instances</a> (informally, it indirectly identifies a series of <a href=”#Proof”>`Proof` instances</a>, each contained in a separate graph). The property is used to provide a sequence of multiple proofs where the order of when the proofs occurred matters. The proof chain property is typically not included in the canonicalized graphs that are then separately digested and digitally signed.
 
   - id: controller
-    label: Controller
     domain: sec:VerificationMethod
     range: IRI
     comment: |
@@ -446,7 +445,6 @@ property:
 
   - id: nonce
     deprecated: true
-    label: Nonce
     domain: sec:Signature
     range: xsd:string
     comment: |
@@ -461,7 +459,6 @@ property:
 
   - id: controller
     deprecated: true
-    label: Controller
     range: IRI
     comment: |
       A controller is an entity that claims control over a particular resource. Note that control is best validated as a two-way relationship where the controller claims control over a particular resource, and the resource clearly identifies its controller.
@@ -475,7 +472,6 @@ property:
 
   - id: password
     deprecated: true
-    label: Password
     range: xsd:string
     comment: A secret that is used to generate a key that can be used to encrypt or decrypt message. It is typically a string value.
 

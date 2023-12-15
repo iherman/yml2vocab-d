@@ -124,8 +124,6 @@ export async function generateVocabularyFiles(yaml_file_name: string, template_f
                 .filter((result): boolean => result.status === "rejected")
                 .map((result): string => (result.status === "rejected" ? result.reason : ''));
 
-            console.log("got here 2")
-
             if (write_errors.length != 0) {
                 // One or more files could not be written, we should throw an exception...
                 throw(new AggregateError(write_errors.join('\n')));

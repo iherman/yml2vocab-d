@@ -161,8 +161,7 @@
                 }
             },
             "required": [
-                "id",
-                "label"
+                "id"
             ],
             "anyOf": [
                 { "required": ["comment"]    },

@@ -11,7 +11,9 @@
     "url": "https://github.com/w3c/yml2vocab-d"
   },
   "tasks": {
-    "generate": "cd test; deno run --allow-read --allow-write --allow-env ../main.ts"
+    "test": "cd test; deno run --allow-read --allow-write --allow-env ../main.ts",
+    "test_di": "cd test/di; deno run --allow-read --allow-write --allow-env ../../main.ts",
+    "test_vcdm": "cd test/vcdm; deno run --allow-read --allow-write --allow-env ../../main.ts"
   },
   "imports": {
     "./common"           : "./common.ts",

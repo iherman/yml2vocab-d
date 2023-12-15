@@ -5,7 +5,7 @@
  * @packageDocumentation
  */
 import { Vocab, RDFTerm, global, RDFClass, RDFProperty, RDFIndividual, Status, RDFDatatype } from './common';
-import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom/deno-dom-wasm.ts";
+import { JSDOM }                                                                             from 'jsdom';
 
 /* ---------------- Utility functions ------------------------- */
 /**
@@ -18,8 +18,8 @@ import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom/d
  * 
  * @internal
  */
- const addChild = (document: HTMLDocument, parent: Element, element: string, content: string|undefined = undefined): Element => {
-    const new_element = document.createElement(element);
+ const addChild = (parent: HTMLElement, element: string, content: string|undefined = undefined): HTMLElement => {
+    const new_element = parent.ownerDocument.createElement(element);
     parent.appendChild(new_element);
     if (content !== undefined) new_element.innerHTML = content;
     return new_element;
@@ -34,7 +34,7 @@ import { DOMParser, HTMLDocument, Element } from "https://deno.land/x/deno_dom/d
  * 
  * @internal
  */
-const addText = (content: string, element: Element|null): Element|null => {
+const addText = (content: string, element: HTMLElement|null): HTMLElement|null => {
     if (element) {
         element.textContent = content
     }
@@ -71,21 +71,6 @@ const bnode = (): string => {
  * @returns
  */
 export function toHTML(vocab: Vocab, template_text: string): string {
-
-    /* *********************** The real processing part ****************** */
-    // Get the DOM of the template
-    // const document: Document = (new JSDOM(template_text)).window.document;
-
-    const document: HTMLDocument = ((text: string): HTMLDocument => {
-        const doc = (new DOMParser()).parseFromString(text, 'text/html');
-        if (doc) {
-            return doc;
-        } else {
-            throw new Error("Problem with parsing the template text");
-        }
-    })(template_text);
-
-
     // This is used to generate cross links, possible to external entities, too
     const resolveCurie = (curie: string): string => {
         const components = curie.split(':');
@@ -117,21 +102,21 @@ export function toHTML(vocab: Vocab, template_text: string): string {
     };
 
     // Factor out all common fields for the terms
-    const commonFields = (section: Element, item: RDFTerm): void => {        
+    const commonFields = (section: HTMLElement, item: RDFTerm): void => {        
         section.setAttribute('resource',`${vocab_prefix}:${item.id}`);
         section.setAttribute('typeof', `${item.type.join(' ')}`);
 
-        const h = addChild(document,section,'h4', `<code>${item.id}</code>`);
-        const term = addChild(document,section, 'p', `<em>${item.label}</code>`);
+        const h = addChild(section,'h4', `<code>${item.id}</code>`);
+        const term = addChild(section, 'p', `<em>${item.label}</code>`);
         term.setAttribute('property', 'rdfs:label');
         if (item.status !== Status.stable) {
-            const span = addChild(document,term, 'span');
+            const span = addChild(term, 'span');
             span.className = 'bold';
-            addChild(document,span, 'em', ` (${item.status})`);
+            addChild(span, 'em', ` (${item.status})`);
         }
 
         if (item.defined_by !== "") {
-            addChild(document,section, 'p', `See the <a rel="rdfs:isDefinedBy" href="${item.defined_by}">formal definition of the term</a>.`);
+            addChild(section, 'p', `See the <a rel="rdfs:isDefinedBy" href="${item.defined_by}">formal definition of the term</a>.`);
         }
 
         if (item.comment !== "") {
@@ -139,37 +124,37 @@ export function toHTML(vocab: Vocab, template_text: string): string {
             if (item.type.includes("owl:ObjectProperty")) {
                 description += "<br><br>The property's value should be a URL, i.e., not a literal."
             }
-            const div = addChild(document,section, 'div', description);
+            const div = addChild(section, 'div', description);
             div.setAttribute('property', 'rdfs:comment');
             div.setAttribute('datatype', 'rdf:HTML')
         } else if (item.type.includes("owl:ObjectProperty")) {
-            addChild(document,section, 'p', "The property's value should be a URL, i.e., not a literal.");
+            addChild(section, 'p', "The property's value should be a URL, i.e., not a literal.");
         }
 
         if (item.see_also && item.see_also.length > 0) {
-            const dl = addChild(document,section, 'dl');
+            const dl = addChild(section, 'dl');
             dl.className = 'terms';
-            addChild(document,dl, 'dt', 'See also:');
-            const dd = addChild(document, dl, 'dd');
+            addChild(dl, 'dt', 'See also:');
+            const dd = addChild(dl, 'dd');
             for (const link of item.see_also) {
-                const a = addChild(document, dd, 'a', link.label);
+                const a = addChild(dd, 'a', link.label);
                 a.setAttribute('href', link.url);
                 a.setAttribute('property', 'rdfs:seeAlso');
-                addChild(document, dd, 'br');
+                addChild(dd, 'br');
             }
         }
 
-        const span = addChild(document, section, 'span');
+        const span = addChild(section, 'span');
         span.setAttribute('property', 'rdfs:isDefinedBy');
         span.setAttribute('resource', `${vocab_prefix}:`);
 
-        const status_span = addChild(document, section, 'span');
+        const status_span = addChild(section, 'span');
         status_span.setAttribute('style', 'display: none');
         status_span.setAttribute('property', 'vs:term_status');
         addText(`${item.status}`, status_span);
 
         if (item.deprecated) {
-            const span = addChild(document, section, 'span');
+            const span = addChild(section, 'span');
             span.setAttribute('property', 'owl:deprecated');
             span.setAttribute('datatype', 'xsd:boolean');
             span.setAttribute('style', 'display: none');
@@ -177,10 +162,10 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         }
     }
 
-    const setExample = (section: Element, item: RDFClass|RDFIndividual|RDFProperty): void => {
+    const setExample = (section: HTMLElement, item: RDFClass|RDFIndividual|RDFProperty): void => {
         if (item.example && item.example.length > 0) {
             for (const ex of item.example) {
-                const example = addChild(document, section, 'pre', ex.json);
+                const example = addChild(section, 'pre', ex.json);
                 example.className = 'example prettyprint language-json';
                 if (ex.label) {
                     example.setAttribute('title', ex.label)
@@ -223,7 +208,7 @@ export function toHTML(vocab: Vocab, template_text: string): string {
             const see_also = vocab.ontology_properties.filter((property): boolean => property.property === 'rdfs:seeAlso')[0].value;
             const target = document.getElementById('see_also');
             if (target) {
-                const a = addChild(document, target, 'a', see_also)
+                const a = addChild(target, 'a', see_also)
                 a.setAttribute('href', see_also);
                 a.setAttribute('property', 'rdfs:seeAlso')
             }
@@ -238,10 +223,10 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         const ns_dl = document.getElementById('namespaces');
         if (ns_dl) {
             for (const ns of vocab.prefixes) {
-                const dt = addChild(document, ns_dl, 'dt');
-                addChild(document, dt, 'code', ns.prefix);
-                const dd = addChild(document, ns_dl, 'dd');
-                addChild(document, dd, 'code', ns.url);
+                const dt = addChild(ns_dl, 'dt');
+                addChild(dt, 'code', ns.prefix);
+                const dd = addChild(ns_dl, 'dd');
+                addChild(dd, 'code', ns.url);
             }
         }
     }
@@ -271,20 +256,20 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         const section = document.getElementById(`${id_prefix}class_definitions`);
         if (section) {
             if (cl_list.length > 0) {
-                addChild(document, section, 'p', `The following are ${intro_prefix} class definitions in the <code>${vocab_prefix}</code> namespace.`);
+                addChild(section, 'p', `The following are ${intro_prefix} class definitions in the <code>${vocab_prefix}</code> namespace.`);
 
                 for (const item of cl_list) {
-                    const cl_section = addChild(document, section, 'section');
+                    const cl_section = addChild(section, 'section');
                     cl_section.id = item.id;
                     commonFields(cl_section, item);
                     // Extra list of superclasses, if applicable
                     if (item.subClassOf && item.subClassOf.length > 0) {
-                        const dl = addChild(document, cl_section, 'dl');
+                        const dl = addChild(cl_section, 'dl');
                         dl.className = 'terms'
-                        addChild(document, dl, 'dt', 'Subclass of:')
-                        const dd = addChild(document, dl, 'dd');
+                        addChild(dl, 'dt', 'Subclass of:')
+                        const dd = addChild(dl, 'dd');
                         for (const superclass of item.subClassOf) {
-                            const span = addChild(document, dd,'span');
+                            const span = addChild(dd,'span');
                             span.innerHTML = resolveCurie(superclass);
                             span.setAttribute('property', 'rdfs:subClassOf');
                             span.setAttribute('resource', superclass);
@@ -303,27 +288,27 @@ export function toHTML(vocab: Vocab, template_text: string): string {
                             return names.join(', ');
                         }
                         
-                        const dl = addChild(document,cl_section, 'dl');
+                        const dl = addChild(cl_section, 'dl');
                         dl.className = 'terms';
 
                         if (item.range_of.length > 0) {
-                            addChild(document,dl, 'dt', "Range of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "Range of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.range_of);
                         }
                         if (item.includes_range_of.length > 0) {
-                            addChild(document, dl, 'dt', "Includes the range of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "Includes the range of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.includes_range_of);
                         }
                         if (item.domain_of.length > 0) {
-                            addChild(document, dl, 'dt', "Domain of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "Domain of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.domain_of);
                         }
                         if (item.included_in_domain_of.length > 0) {
-                            addChild(document, dl, 'dt', "In the domain of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "In the domain of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.included_in_domain_of);
                         }
                     }
@@ -347,54 +332,54 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         const section = document.getElementById(`${id_prefix}property_definitions`);
         if (section) {
             if (pr_list.length > 0) {
-                addChild(document, section, 'p', `The following are ${intro_prefix} property definitions in the <code>${vocab_prefix}</code> namespace.`);
+                addChild(section, 'p', `The following are ${intro_prefix} property definitions in the <code>${vocab_prefix}</code> namespace.`);
 
                 for (const item of pr_list) {
-                    const pr_section = addChild(document, section, 'section');
+                    const pr_section = addChild(section, 'section');
                     pr_section.id = item.id;
                     commonFields(pr_section,item);
-                    // Extra list of superproperty, if applicable
+                    // Extra list of superproperties, if applicable
                     if (item.subPropertyOf && item.subPropertyOf.length > 0) {
-                        const dl = addChild(document, pr_section, 'dl');
+                        const dl = addChild(pr_section, 'dl');
                         dl.className = 'terms'
-                        addChild(document, dl, 'dt', 'Subproperty of:')
-                        const dd = addChild(document, dl, 'dd');
+                        addChild(dl, 'dt', 'Subproperty of:')
+                        const dd = addChild(dl, 'dd');
                         for (const superproperty of item.subPropertyOf) {
-                            const span = addChild(document, dd, 'span');
+                            const span = addChild(dd, 'span');
                             span.innerHTML = resolveCurie(superproperty);
                             span.setAttribute('property', 'rdfs:subPropertyOf');
                             span.setAttribute('resource', superproperty);
-                            addChild(document, dd, 'br');
+                            addChild(dd, 'br');
                         }
                     }
 
                     // Again an extra list for range/domain definitions, if applicable
                     if ((item.range && item.range.length > 0) || (item.domain && item.domain.length > 0)) {
-                        const dl = addChild(document, pr_section, 'dl');
+                        const dl = addChild(pr_section, 'dl');
                         dl.className = 'terms';
 
                         if (item.range && item.range.length > 0) {
-                            addChild(document, dl, 'dt', 'Range:');
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', 'Range:');
+                            const dd = addChild(dl, 'dd');
                             dd.setAttribute('property', 'rdfs:range');
                             if (item.range.length === 1) {
                                 dd.setAttribute('resource',item.range[0])
                                 dd.innerHTML = resolveCurie(item.range[0]);
                             } else {
                                 addText('Intersection of:', dd)
-                                addChild(document, dd, 'br')
+                                addChild(dd, 'br')
                                 for (const entry of item.range) {
-                                    const r_span = addChild(document, dd, 'span')
+                                    const r_span = addChild(dd, 'span')
                                     r_span.setAttribute('resource', entry);
                                     r_span.innerHTML = resolveCurie(entry);
-                                    addChild(document, dd, 'br')
+                                    addChild(dd, 'br')
                                 }
                             }
                         } 
                                          
                         if (item.domain && item.domain.length > 0) {
-                            addChild(document, dl, 'dt', 'Domain:');
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', 'Domain:');
+                            const dd = addChild(dl, 'dd');
                             dd.setAttribute('property', 'rdfs:domain')
                             if (item.domain.length === 1) {
                                 dd.setAttribute('resource',item.domain[0])
@@ -405,15 +390,15 @@ export function toHTML(vocab: Vocab, template_text: string): string {
                                 const u_bnode = bnode();
                                 dd.setAttribute('resource', u_bnode)
                                 addText('Union of: ', dd);
-                                addChild(document, dd, 'br')
+                                addChild(dd, 'br')
                                 for (const entry of item.domain) {
-                                    const sp = addChild(document, dd, 'span');
+                                    const sp = addChild(dd, 'span');
                                     sp.setAttribute('about', u_bnode);
                                     sp.setAttribute('inlist', 'true');
                                     sp.setAttribute('property', 'owl:unionOf');
                                     sp.setAttribute('resource', entry);
                                     sp.innerHTML = resolveCurie(entry);
-                                    addChild(document, dd, 'br')
+                                    addChild(dd, 'br')
                                 }
                             }
                         }
@@ -437,20 +422,20 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         const section = document.getElementById(`${id_prefix}individual_definitions`);
         if (section) {
             if (ind_list.length > 0) {
-                addChild(document, section, 'p', `The following are definitions for ${intro_prefix} individuals in the <code>${vocab_prefix}</code> namespace.`);
+                addChild(section, 'p', `The following are definitions for ${intro_prefix} individuals in the <code>${vocab_prefix}</code> namespace.`);
 
                 for (const item of ind_list) {
-                    const ind_section = addChild(document, section, 'section');
+                    const ind_section = addChild(section, 'section');
                     ind_section.id = item.id;
                     commonFields(ind_section,item);
-                    const dl = addChild(document, ind_section, 'dl');
+                    const dl = addChild(ind_section, 'dl');
                     dl.className = 'terms';
                     if (item.type.length > 0) {
-                        addChild(document, dl, 'dt', 'Type')
-                        const dd = addChild(document, dl, 'dd');
+                        addChild(dl, 'dt', 'Type')
+                        const dd = addChild(dl, 'dd');
                         for (const itype of item.type) {
-                            addChild(document, dd, 'span', resolveCurie(itype));
-                            addChild(document, dd, 'br')    
+                            addChild(dd, 'span', resolveCurie(itype));
+                            addChild(dd, 'br')    
                         }
                     }
                     setExample(ind_section, item);
@@ -473,20 +458,20 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         const section = document.getElementById(`${id_prefix}datatype_definitions`);
         if (section) {
             if (dt_list.length > 0) {
-                addChild(document, section, 'p', `The following are ${intro_prefix} datatype definitions in the <code>${vocab_prefix}</code> namespace.`);
+                addChild(section, 'p', `The following are ${intro_prefix} datatype definitions in the <code>${vocab_prefix}</code> namespace.`);
 
                 for (const item of dt_list) {
-                    const dt_section = addChild(document, section, 'section');
+                    const dt_section = addChild(section, 'section');
                     dt_section.id = item.id;
                     commonFields(dt_section, item);
 
                     if (item.subClassOf && item.subClassOf.length > 0) {
-                        const dl = addChild(document, dt_section, 'dl');
+                        const dl = addChild(dt_section, 'dl');
                         dl.className = 'terms';
-                        addChild(document, dl, 'dt', 'Derived from:');
-                        const dd = addChild(document, dl, 'dd');
+                        addChild(dl, 'dt', 'Derived from:');
+                        const dd = addChild(dl, 'dd');
                         for (const superclass of item.subClassOf) {
-                            const span = addChild(document, dd, 'span');
+                            const span = addChild(dd, 'span');
                             span.innerHTML = resolveCurie(superclass);
                             span.setAttribute('property', 'rdfs:subClassOf');
                             span.setAttribute('resource', superclass);
@@ -499,16 +484,16 @@ export function toHTML(vocab: Vocab, template_text: string): string {
                             const names = ids.map(resolveCurie);
                             return names.join(', ');
                         }
-                        const dl = addChild(document, dt_section, 'dl');
+                        const dl = addChild(dt_section, 'dl');
                         dl.className = 'terms';
                         if (item.range_of.length > 0) {
-                            addChild(document, dl, 'dt', "Range of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "Range of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.range_of);
                         }
                         if (item.includes_range_of.length > 0) {
-                            addChild(document, dl, 'dt', "Includes the range of:");
-                            const dd = addChild(document, dl, 'dd');
+                            addChild(dl, 'dt', "Includes the range of:");
+                            const dd = addChild(dl, 'dd');
                             dd.innerHTML = prop_names(item.includes_range_of);
                         }
                     }
@@ -522,7 +507,11 @@ export function toHTML(vocab: Vocab, template_text: string): string {
         }   
     }
 
-    
+
+
+    /* *********************** The real processing part ****************** */
+    // Get the DOM of the template
+    const document: Document = (new JSDOM(template_text)).window.document;
 
     // The prefix and the URL for the vocabulary itself
     // I am just lazy to type things that are too long... :-)
@@ -575,7 +564,7 @@ export function toHTML(vocab: Vocab, template_text: string): string {
 
     // That is it... generate the output
     // I wish it was possible to generate a properly formatted HTML source, but I am not sure how to do that
-    return `<!DOCTYPE html>\n<html>${document.documentElement?.innerHTML}</html>`;
+    return `<!DOCTYPE html>\n<html>${document.documentElement.innerHTML}</html>`;
 }
 
 
